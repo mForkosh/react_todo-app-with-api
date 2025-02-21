@@ -26,10 +26,10 @@ export const TodoItem: React.FC<Props> = ({
     activeInput.current?.focus();
   }, [activeTodo]);
 
-  function changeTitle(e?: React.FocusEvent<HTMLFormElement>) {
-    e?.preventDefault();
+  function changeTitle() {
+    const normalizeInputValue = inputValue.trim();
 
-    if (inputValue.length === 0) {
+    if (normalizeInputValue.length === 0) {
       onDeleteTodo(todo.id)
         ?.then(() => onChangeActiveTodo(null))
         .catch(() =>
@@ -41,13 +41,13 @@ export const TodoItem: React.FC<Props> = ({
       return;
     }
 
-    if (inputValue === activeTodo?.title) {
+    if (normalizeInputValue === activeTodo?.title) {
       onChangeActiveTodo(null);
 
       return;
     }
 
-    onChangeTodo({ ...todo, title: inputValue })?.catch(() =>
+    onChangeTodo({ ...todo, title: normalizeInputValue })?.catch(() =>
       setTimeout(() => {
         activeInput.current?.focus();
       }, 0),

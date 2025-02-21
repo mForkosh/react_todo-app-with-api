@@ -15,6 +15,7 @@ import classNames from 'classnames';
 import { useErrorMessage } from './utils/useErrorMessage';
 import { FooterContent } from './components/FooterContent/FooterContent';
 import { TypeFilterParams } from './types/filterParams';
+import { CSSTransition, TransitionGroup } from 'react-transition-group';
 
 export const App: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
@@ -115,7 +116,7 @@ export const App: React.FC = () => {
   function changeDataTodo(todo: Todo) {
     setIsActive(cur => [...cur, todo.id]);
 
-    return changeTodo(todo.id, todo)
+    return changeTodo(todo)
       .then(res => {
         setUserTodos(curr => curr.map(t => (t.id !== todo.id ? t : res)));
       })
@@ -185,12 +186,11 @@ export const App: React.FC = () => {
           </form>
         </header>
 
-        {todosListNotEmpty && (
-          <>
-            <section className="todoapp__main" data-cy="TodoList">
-              {visibleTodos.map(todo => (
+        <section className="todoapp__main" data-cy="TodoList">
+          <TransitionGroup>
+            {visibleTodos.map(todo => (
+              <CSSTransition key={todo.id} timeout={300} classNames="item">
                 <TodoItem
-                  key={todo.id}
                   todo={todo}
                   activeTodo={activeTodo}
                   isProcessed={isActive.includes(todo.id)}
@@ -198,24 +198,28 @@ export const App: React.FC = () => {
                   onChangeTodo={t => changeDataTodo(t)}
                   onChangeActiveTodo={t => setActiveTodo(t)}
                 />
-              ))}
-              {tempTodo && (
+              </CSSTransition>
+            ))}
+            {tempTodo && (
+              <CSSTransition key={0} timeout={300} classNames="temp-item">
                 <TodoItem
                   todo={tempTodo}
                   isProcessed={true}
                   activeTodo={null}
                 />
-              )}
-            </section>
+              </CSSTransition>
+            )}
+          </TransitionGroup>
+        </section>
 
-            <FooterContent
-              countNotComplete={countNotComplete}
-              filterBy={filterBy}
-              isCompleteTodo={isCompleteTodo}
-              onChangeFilterBy={fp => setFilterBy(fp)}
-              onDeleteCompletTodos={() => removeAllComplete()}
-            />
-          </>
+        {todosListNotEmpty && (
+          <FooterContent
+            countNotComplete={countNotComplete}
+            filterBy={filterBy}
+            isCompleteTodo={isCompleteTodo}
+            onChangeFilterBy={fp => setFilterBy(fp)}
+            onDeleteCompletTodos={() => removeAllComplete()}
+          />
         )}
       </div>
 
