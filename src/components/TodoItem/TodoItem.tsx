@@ -10,6 +10,13 @@ type Props = {
   onChangeActiveTodo?: (t: Todo | null) => void;
 };
 
+const EMPTY_TODO: Todo = {
+  id: -1,
+  userId: -1,
+  title: '',
+  completed: false,
+};
+
 export const TodoItem: React.FC<Props> = ({
   todo,
   isProcessed,
@@ -20,6 +27,10 @@ export const TodoItem: React.FC<Props> = ({
 }) => {
   const [inputValue, setInputValue] = useState('');
   const activeInput = useRef<HTMLInputElement | null>(null);
+  const { title, id, completed } = todo;
+  const { title: activeTitle, id: activeId } = activeTodo
+    ? activeTodo
+    : EMPTY_TODO;
 
   useEffect(() => {
     setInputValue(activeTodo ? activeTodo.title : '');
@@ -41,17 +52,21 @@ export const TodoItem: React.FC<Props> = ({
       return;
     }
 
-    if (normalizeInputValue === activeTodo?.title) {
+    if (normalizeInputValue === activeTitle) {
       onChangeActiveTodo(null);
 
       return;
     }
 
-    onChangeTodo({ ...todo, title: normalizeInputValue })?.catch(() =>
-      setTimeout(() => {
-        activeInput.current?.focus();
-      }, 0),
-    );
+    onChangeTodo({ ...todo, title: normalizeInputValue })
+      ?.then(() => {
+        onChangeActiveTodo(null);
+      })
+      .catch(() =>
+        setTimeout(() => {
+          activeInput.current?.focus();
+        }, 0),
+      );
   }
 
   function onPressKeyInForm(e: React.KeyboardEvent<HTMLFormElement>) {
@@ -66,7 +81,7 @@ export const TodoItem: React.FC<Props> = ({
   return (
     <div
       data-cy="Todo"
-      className={classNames('todo', { completed: todo.completed })}
+      className={classNames('todo', { completed: completed })}
     >
       {/* eslint-disable-next-line jsx-a11y/label-has-associated-control */}
       <label className="todo__status-label">
@@ -74,12 +89,12 @@ export const TodoItem: React.FC<Props> = ({
           data-cy="TodoStatus"
           type="checkbox"
           className="todo__status"
-          checked={todo.completed}
-          onChange={() => onChangeTodo({ ...todo, completed: !todo.completed })}
+          checked={completed}
+          onChange={() => onChangeTodo({ ...todo, completed: !completed })}
         />
       </label>
 
-      {activeTodo === todo ? (
+      {activeId === id ? (
         <form onKeyDown={onPressKeyInForm} onBlur={changeTitle}>
           <input
             ref={activeInput}
@@ -99,13 +114,13 @@ export const TodoItem: React.FC<Props> = ({
             className="todo__title"
             onDoubleClick={() => onChangeActiveTodo(todo)}
           >
-            {todo.title}
+            {title}
           </span>
           <button
             type="button"
             className="todo__remove"
             data-cy="TodoDelete"
-            onClick={() => onDeleteTodo(todo.id)}
+            onClick={() => onDeleteTodo(id)}
           >
             ×
           </button>

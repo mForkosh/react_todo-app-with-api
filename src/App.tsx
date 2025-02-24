@@ -10,21 +10,21 @@ import {
   USER_ID,
 } from './api/todos';
 import { Todo } from './types/Todo';
-import { TodoItem } from './components/TodoItem/TodoItem';
 import classNames from 'classnames';
 import { useErrorMessage } from './utils/useErrorMessage';
-import { FooterContent } from './components/FooterContent/FooterContent';
-import { TypeFilterParams } from './types/filterParams';
 import { CSSTransition, TransitionGroup } from 'react-transition-group';
+import { FooterContent } from './components/FooterContent';
+import { TodoList } from './components/TodoList';
+import { TodoItem } from './components/TodoItem';
+import { FilterParams } from './types/filterParams';
 
 export const App: React.FC = () => {
   const [inputValue, setInputValue] = useState('');
   const [userTodos, setUserTodos] = useState<Todo[]>([]);
   const [tempTodo, setTempTodo] = useState<null | Todo>(null);
-  const [filterBy, setFilterBy] = useState<TypeFilterParams>('All');
+  const [filterBy, setFilterBy] = useState<FilterParams>(FilterParams.all);
   const [errorMessage, setErrorMessage] = useErrorMessage('');
-  const [isActive, setIsActive] = useState<number[]>([]);
-  const [activeTodo, setActiveTodo] = useState<null | Todo>(null);
+  const [todosAreUpdated, setTodosAreUpdated] = useState<number[]>([]);
 
   const todoInput = useRef<HTMLInputElement>(null);
   const {
@@ -91,7 +91,7 @@ export const App: React.FC = () => {
   }
 
   function removeTodo(id: number) {
-    setIsActive(curr => [...curr, id]);
+    setTodosAreUpdated(curr => [...curr, id]);
 
     return deleteTodos(id)
       .then(() => setUserTodos(cur => cur.filter(t => t.id !== id)))
@@ -100,7 +100,7 @@ export const App: React.FC = () => {
         throw er;
       })
       .finally(() => {
-        setIsActive(cur => cur.filter(v => v !== id));
+        setTodosAreUpdated(cur => cur.filter(v => v !== id));
         todoInput.current?.focus();
       });
   }
@@ -114,7 +114,7 @@ export const App: React.FC = () => {
   }
 
   function changeDataTodo(todo: Todo) {
-    setIsActive(cur => [...cur, todo.id]);
+    setTodosAreUpdated(cur => [...cur, todo.id]);
 
     return changeTodo(todo)
       .then(res => {
@@ -125,7 +125,7 @@ export const App: React.FC = () => {
         throw er;
       })
       .finally(() => {
-        setIsActive(cur => cur.filter(v => v !== todo.id));
+        setTodosAreUpdated(cur => cur.filter(v => v !== todo.id));
       });
   }
 
@@ -167,7 +167,7 @@ export const App: React.FC = () => {
                 active: allTodosIsComlete,
               })}
               data-cy="ToggleAllButton"
-              onClick={() => changeAllStatus()}
+              onClick={changeAllStatus}
             />
           )}
 
@@ -188,18 +188,12 @@ export const App: React.FC = () => {
 
         <section className="todoapp__main" data-cy="TodoList">
           <TransitionGroup>
-            {visibleTodos.map(todo => (
-              <CSSTransition key={todo.id} timeout={300} classNames="item">
-                <TodoItem
-                  todo={todo}
-                  activeTodo={activeTodo}
-                  isProcessed={isActive.includes(todo.id)}
-                  onDeleteTodo={id => removeTodo(id)}
-                  onChangeTodo={t => changeDataTodo(t)}
-                  onChangeActiveTodo={t => setActiveTodo(t)}
-                />
-              </CSSTransition>
-            ))}
+            <TodoList
+              visibleTodos={visibleTodos}
+              todosAreUpdated={todosAreUpdated}
+              onDeleteTodo={removeTodo}
+              onChangeTodo={changeDataTodo}
+            />
             {tempTodo && (
               <CSSTransition key={0} timeout={300} classNames="temp-item">
                 <TodoItem
@@ -218,7 +212,7 @@ export const App: React.FC = () => {
             filterBy={filterBy}
             isCompleteTodo={isCompleteTodo}
             onChangeFilterBy={fp => setFilterBy(fp)}
-            onDeleteCompletTodos={() => removeAllComplete()}
+            onDeleteCompletTodos={removeAllComplete}
           />
         )}
       </div>

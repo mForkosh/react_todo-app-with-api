@@ -1,12 +1,12 @@
 import classNames from 'classnames';
 import React from 'react';
-import { filterParams, TypeFilterParams } from '../../types/filterParams';
+import { FilterParams } from '../../types/filterParams';
 
 type Props = {
   countNotComplete: number;
-  filterBy: TypeFilterParams;
+  filterBy: FilterParams;
   isCompleteTodo: boolean;
-  onChangeFilterBy: (f: TypeFilterParams) => void;
+  onChangeFilterBy: (f: FilterParams) => void;
   onDeleteCompletTodos: () => void;
 };
 
@@ -25,7 +25,7 @@ export const FooterContent: React.FC<Props> = ({
 
       {/* Active link should have the 'selected' class */}
       <nav className="filter" data-cy="Filter">
-        {Object.values(filterParams).map(v => (
+        {Object.values(FilterParams).map(v => (
           <a
             key={v}
             href={`#/${v !== 'All' ? v.toLocaleLowerCase() : ''}`}
@@ -45,7 +45,7 @@ export const FooterContent: React.FC<Props> = ({
         className="todoapp__clear-completed"
         data-cy="ClearCompletedButton"
         disabled={!isCompleteTodo}
-        onClick={() => onDeleteCompletTodos()}
+        onClick={onDeleteCompletTodos}
       >
         Clear completed
       </button>
